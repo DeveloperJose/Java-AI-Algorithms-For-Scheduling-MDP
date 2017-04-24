@@ -47,6 +47,7 @@ public class State implements Comparable<State>{
     
     public Action getNextBestActionQ(){
         double highestValue = Integer.MIN_VALUE;
+        
         Action bestAction = null;
         for(Action action : actions){
             double maxQ = action.getMaxQ();

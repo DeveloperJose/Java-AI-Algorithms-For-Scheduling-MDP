@@ -33,8 +33,8 @@ public class Action {
         double maxQ = Integer.MIN_VALUE;
         
         for(Tuple t : destinations){            
-            if(t.Q > maxQ){
-                maxQ = t.Q;
+            if(t.nextState.getMaxQ() + t.Q > maxQ){
+                maxQ = t.nextState.getMaxQ() + t.Q;
             }
         }
         return maxQ;
@@ -42,10 +42,7 @@ public class Action {
     
     public void addDestination(State destination, double probability){
         int nextIndex = destinations.size();
-        if(destination.isFinal)
-            destinations.add(new Tuple(destination, probability, 0));
-        else
-            destinations.add(new Tuple(destination, probability, 0));
+        destinations.add(new Tuple(destination, probability, reward));
         
         distRand.addNumber(nextIndex, probability);
     }
@@ -83,7 +80,7 @@ public class Action {
         double highestValue = Integer.MIN_VALUE;
         State bestState = null;
         for(Tuple t : destinations){
-            if(t.Q > highestValue){
+            if(t.nextState.getMaxQ() + t.Q > highestValue){
                 highestValue = t.Q;
                 bestState = t.nextState;
             }
