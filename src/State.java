@@ -45,6 +45,19 @@ public class State implements Comparable<State>{
         return bestAction;
     }
     
+    public Action getNextBestActionQ(){
+        double highestValue = Integer.MIN_VALUE;
+        Action bestAction = null;
+        for(Action action : actions){
+            double maxQ = action.getMaxQ();
+            if(maxQ > highestValue){
+                highestValue = maxQ;
+                bestAction = action;
+            }
+        }
+        return bestAction;
+    }
+    
     public String toString(){
         String result = "{Vertex=" + name + "}\n";
         
@@ -53,7 +66,8 @@ public class State implements Comparable<State>{
             
             int count = 0;
             result += "\t\t->";
-            for(State v : a.destinations){
+            for(Tuple t : a.destinations){
+                State v = t.nextState;
                 if(count >= 1)
                     result += ", ";
                 result += v.name;

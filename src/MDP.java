@@ -8,8 +8,85 @@ public class MDP {
         this.currentState = startingState;
     }
     
+    public void resetValues(){
+        for (State state : startingState.getChildren())
+            state.value = 0;
+    }
+    
+    public void qLearning(){
+        double gamma = 0.99; // Discount Factor
+        double alpha = 0.1; // Learning rate
+        
+        Set<State> allStates = new TreeSet<>();
+        allStates.add(startingState);
+        allStates.addAll(startingState.getChildren());
+        boolean isRunning = true;
+        int iterations = 0;
+        
+        while(isRunning){
+            Action actionToTake = currentState.getNextAction();
+            State nextState = actionToTake.getNextRandomState();
+            iterations++;
+            
+            for (int i = 0; i < currentState.actions.size(); i++){
+                Action action = currentState.actions.get(i);
+                Action futureAction = nextState.getNextBestActionQ();
+                
+                if(futureAction == null)
+                    break;
+                
+                for(Tuple t : action.destinations){
+                    double newQValue = t.Q + (alpha * action.getQValueUpdate(gamma) - t.Q);
+                
+                    for(Tuple futureTuple : futureAction.destinations){
+                        double futureQ = futureTuple.Q;
+                        System.out.printf("(Action %s) Old Q = %.3f, New Q = %.3f, Immediate Reward = %.3f, Next State(%s) Q = %.2f \n", action.name, t.Q, newQValue, action.reward, nextState.name, futureQ);
+                    }
+                    double difference = Math.abs(t.Q - newQValue);
+                    System.out.println(difference);
+                    if(difference < 0.0000000001)
+                        isRunning = false;
+                    
+                    t.Q = newQValue;
+                }
+            }
+            alpha *= 0.99;
+            currentState = nextState;
+            if(currentState.isFinal)
+                currentState = startingState;
+        }
+        
+        System.out.printf("Episodes %s\n", iterations);
+        System.out.println("Final Q values");
+        
+        for(State state : startingState.getChildren()){
+            System.out.println("State: " + state.name);
+            for(Action action : state.actions){
+                for(Tuple t : action.destinations){
+                    System.out.printf("\t(Action = %s -> %s, Q Value = %.3f)\n", t.nextState.name, action.name, t.Q);
+                }
+            }
+            System.out.println();
+        }
+        
+        currentState = startingState;
+        double totalReward = 0;
+        System.out.printf("Best Policy {%s ->", currentState.name);
+        
+        while(!currentState.isFinal){
+            Action nextAction = currentState.getNextBestActionQ();
+            State nextState = nextAction.getBestStateQ();
+            
+            System.out.printf("%s -> ", nextState.name);
+
+            totalReward += nextAction.reward;
+            currentState = nextState;
+        }
+        System.out.printf("}\nTotal reward: %s\n", totalReward);
+    }
+    
     public void valueIteration(){
-        double gamma = 0.99;
+        double gamma = 0.99; // Discount Factor
         Set<State> allStates = new TreeSet<>();
         allStates.add(startingState);
         allStates.addAll(startingState.getChildren());
@@ -34,14 +111,33 @@ public class MDP {
                 double newValue = Collections.max(values);
                 double difference = Math.abs(newValue - state.value);
                 state.value = newValue;
-                System.out.print(difference + ",");
-                if(difference < 0.001){
+
+                if(difference < 0.001)
                     isRunning = false;
-                }
+                
             }
         }
-        System.out.println();
+
         System.out.println("Iterations: " + iterations);
+        
+        // Final values for each state
+        printStateValues();
+        
+        // Print out the best policy
+        double totalReward = 0;
+        System.out.printf("Best Policy {%s ->", currentState.name);
+        
+        while(!currentState.isFinal){
+            Action nextAction = currentState.getNextBestAction();
+            State nextState = nextAction.getBestState();
+            
+            System.out.printf("%s -> ", nextState.name);
+
+            totalReward += nextAction.reward;
+            currentState = nextState;
+        }
+        System.out.printf("}\nTotal reward: %s\n", totalReward);
+        currentState = startingState;
     }
     
     public void firstVisitMonteCarlo(double alpha){
@@ -75,24 +171,11 @@ public class MDP {
         System.out.printf("Average reward: %.2f\n", averageReward);
     }
     
-    public void run(){
-        double totalReward = 0;
-        while(!currentState.isFinal){
-            Action nextAction = currentState.getNextBestAction();
-            State nextState = nextAction.getBestState();
-            
-            System.out.println("Going to " + nextState.name);
-
-            totalReward += nextAction.reward;
-            currentState = nextState;
-        }
-        System.out.println("Total reward: " + totalReward);
-        currentState = startingState;
-    }
-    
     public void printStateValues(){
+        System.out.println("State Values");
         for(State state : startingState.getChildren())
             System.out.printf("(State=%s, Value=%.3f)\n", state.name, state.value);
+        System.out.println();
     }
     
     public static MDP createStudentLife(){
