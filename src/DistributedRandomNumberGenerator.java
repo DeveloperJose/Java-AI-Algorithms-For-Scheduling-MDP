@@ -1,6 +1,6 @@
 import java.util.*;
 public class DistributedRandomNumberGenerator {
-    private HashMap<Integer, Double> distribution;
+    public HashMap<Integer, Double> distribution;
     private double distSum;
 
     public DistributedRandomNumberGenerator() {

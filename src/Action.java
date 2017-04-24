@@ -16,6 +16,18 @@ public class Action {
         addDestination(destination, 1.0);
     }
     
+    public double getValue(double stateProbability, double gamma){
+        double result = 0;
+        
+        for(int i = 0; i < destinations.size(); i++){
+            State state = destinations.get(i);
+            double probability = distRand.distribution.get(i);
+            result += (stateProbability * probability) * (reward + (gamma * state.value));
+        }
+        
+        return result;
+    }
+    
     public List<State> destinations;
     public void addDestination(State destination, double probability){
         int nextIndex = destinations.size();
@@ -32,9 +44,21 @@ public class Action {
         return list;
     }
     
-    public State destination(){
+    public State getNextRandomState(){
         int randomIndex = distRand.getDistributedRandomNumber();
         State randomDestination = destinations.get(randomIndex);
         return randomDestination;
+    }
+    
+    public State getBestState(){
+        double highestValue = Integer.MIN_VALUE;
+        State bestState = null;
+        for(State state : destinations){
+            if(state.value > highestValue){
+                highestValue = state.value;
+                bestState = state;
+            }
+        }
+        return bestState;
     }
 }

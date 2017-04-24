@@ -8,9 +8,91 @@ public class MDP {
         this.currentState = startingState;
     }
     
-    public void step(){
-        currentState = currentState.transition();
-        System.out.println("Now in state: " + currentState.name);
+    public void valueIteration(){
+        double gamma = 0.99;
+        Set<State> allStates = new TreeSet<>();
+        allStates.add(startingState);
+        allStates.addAll(startingState.getChildren());
+        
+        boolean isRunning = true;
+        int iterations = 0;
+        
+        while(isRunning){
+            // Update all the states
+            for(State state : allStates){
+                if(state.isFinal)
+                    continue;
+                iterations++;
+                //State state = startingState.actions.get(1).destinations.get(0);
+                //System.out.println("State: " + state.name);
+                List<Double> values = new ArrayList<>();
+                double prob = 1f / state.actions.size();
+                for(Action action : state.actions)
+                    values.add(action.getValue(prob, gamma));
+                
+                
+                double newValue = Collections.max(values);
+                double difference = Math.abs(newValue - state.value);
+                state.value = newValue;
+                System.out.print(difference + ",");
+                if(difference < 0.001){
+                    isRunning = false;
+                }
+            }
+        }
+        System.out.println();
+        System.out.println("Iterations: " + iterations);
+    }
+    
+    public void firstVisitMonteCarlo(double alpha){
+        Set<State> visitedStates = new TreeSet<>();
+        double totalReward = 0;
+        double totalVisits = 0;
+        
+        while(!currentState.isFinal){
+            Action actionToTake = currentState.getNextAction();
+            State nextState = actionToTake.getNextRandomState();
+            double reward = actionToTake.reward;    
+           
+            // Only update on first visit :)
+            if(!visitedStates.contains(currentState)){
+                currentState.value = currentState.value + alpha * (reward - currentState.value);
+                visitedStates.add(currentState);
+            }
+            
+            currentState = nextState;
+            totalReward += reward;
+            totalVisits++;
+            
+            System.out.printf("[%s,%s,%.3f]->", actionToTake.name, currentState.name, reward);
+        }
+        System.out.println();
+        
+        currentState = startingState;
+        System.out.printf("Total reward: %.2f\n", totalReward);
+        
+        double averageReward = totalReward / totalVisits;
+        System.out.printf("Average reward: %.2f\n", averageReward);
+    }
+    
+    public void run(){
+        double totalReward = 0;
+        while(!currentState.isFinal){
+            Action nextAction = currentState.getNextBestAction();
+            State nextState = nextAction.getBestState();
+            
+            System.out.println("Going to " + nextState.name);
+
+            totalReward += nextAction.reward;
+            currentState = nextState;
+        }
+        System.out.println("Total reward: " + totalReward);
+        currentState = startingState;
+    }
+    
+    public void printStateValues(){
+        for(State state : startingState.getChildren())
+            System.out.printf("(State=%s, Value=%.3f)\n", state.name, state.value);
     }
     
     public static MDP createStudentLife(){
@@ -83,7 +165,6 @@ public class MDP {
         for(State v : states){
             sb.append("\t" + v);
         }
-        
         
         return sb.toString();
     }

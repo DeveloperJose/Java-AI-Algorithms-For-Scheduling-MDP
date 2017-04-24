@@ -1,11 +1,13 @@
 import java.util.*;
 public class State implements Comparable<State>{
     public String name;
+    public double value;
     public boolean isFinal;
-    private List<Action> actions;
+    public List<Action> actions;
     
     public State(String state){
         this.name = state;
+        value = 0;
         actions = new ArrayList<>();
     }
     
@@ -23,11 +25,24 @@ public class State implements Comparable<State>{
         return list;
     }
     
-    public State transition(){
+    public Action getNextAction(){
         int randomIndex = Util.getRandom().nextInt(actions.size());
         Action randomAction = actions.get(randomIndex);
         
-        return randomAction.destination();
+        return randomAction;
+    }
+    
+    public Action getNextBestAction(){
+        double highestValue = Integer.MIN_VALUE;
+        Action bestAction = null;
+        for(Action action : actions){
+            State actionBestState = action.getBestState();
+            if(actionBestState.value > highestValue){
+                highestValue = actionBestState.value;
+                bestAction = action;
+            }
+        }
+        return bestAction;
     }
     
     public String toString(){
