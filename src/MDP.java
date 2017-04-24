@@ -13,53 +13,73 @@ public class MDP {
             state.value = 0;
     }
     
+    public State getState(String name){
+        Set<State> allStates = new TreeSet<>();
+        allStates.add(startingState);
+        allStates.addAll(startingState.getChildren());
+        for(State state : allStates)
+            if(state.name.equals(name))
+                return state;
+        return null;
+    }
+    
     public void qLearning(){
         double gamma = 0.99; // Discount Factor
-        double alpha = 0.1; // Learning rate
+        double alpha = 0.01; // Learning rate
         
         Set<State> allStates = new TreeSet<>();
         allStates.add(startingState);
         allStates.addAll(startingState.getChildren());
         boolean isRunning = true;
         int iterations = 0;
-        
+                
+        currentState = startingState;
         while(isRunning){
-            Action actionToTake = currentState.getNextAction();
-            State nextState = actionToTake.getNextRandomState();
+            Action actionToTake = currentState.getNextBestActionQ();
+            State nextState = actionToTake.getBestStateQ();
             iterations++;
+            
+            //System.out.println(getState("RD10p").getMaxQ());
             
             for (int i = 0; i < currentState.actions.size(); i++){
                 Action action = currentState.actions.get(i);
-                Action futureAction = nextState.getNextBestActionQ();
-                
-                if(futureAction == null)
-                    break;
-                
+            
                 for(Tuple t : action.destinations){
-                    double newQValue = t.Q + (alpha * action.getQValueUpdate(gamma) - t.Q);
-                
-                    for(Tuple futureTuple : futureAction.destinations){
-                        double futureQ = futureTuple.Q;
-                        System.out.printf("(Action %s) Old Q = %.3f, New Q = %.3f, Immediate Reward = %.3f, Next State(%s) Q = %.2f \n", action.name, t.Q, newQValue, action.reward, nextState.name, futureQ);
-                    }
+                    double newQValue = t.Q + (alpha * (action.reward + gamma * nextState.getMaxQ() - t.Q));
                     double difference = Math.abs(t.Q - newQValue);
-                    System.out.println(difference);
-                    if(difference < 0.0000000001)
-                        isRunning = false;
+                    //System.out.println(difference);
                     
                     t.Q = newQValue;
+                    //if(difference < 0.001)
+                        //isRunning = false;
+                    
+                    if(iterations > 1000)
+                        isRunning = false;
+                    
+                    //Action futureAction = nextState.getNextBestActionQ();
+                    
+                    //if(futureAction == null)
+                      //  continue;
+                    
+                    //for(Tuple futureTuple : futureAction.destinations){
+                        //double futureQ = futureTuple.Q;
+                        //System.out.printf("(Action %s) Old Q = %.3f, New Q = %.3f, Immediate Reward = %.3f, Next State(%s) Q = %.2f \n", action.name, t.Q, newQValue, action.reward, nextState.name, futureQ);
+                    //}
                 }
             }
-            alpha *= 0.99;
+            
             currentState = nextState;
-            if(currentState.isFinal)
+            if(currentState.isFinal){
                 currentState = startingState;
+                alpha *= 0.99;
+            }  
         }
         
         System.out.printf("Episodes %s\n", iterations);
         System.out.println("Final Q values");
         
-        for(State state : startingState.getChildren()){
+        
+        for(State state : allStates){
             System.out.println("State: " + state.name);
             for(Action action : state.actions){
                 for(Tuple t : action.destinations){

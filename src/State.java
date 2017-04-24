@@ -25,7 +25,7 @@ public class State implements Comparable<State>{
         return list;
     }
     
-    public Action getNextAction(){
+    public Action getNextAction(){        
         int randomIndex = Util.getRandom().nextInt(actions.size());
         Action randomAction = actions.get(randomIndex);
         
@@ -56,6 +56,20 @@ public class State implements Comparable<State>{
             }
         }
         return bestAction;
+    }
+    
+    public double getMaxQ(){
+        if(isFinal)
+            return 0;
+        
+        double highestValue = Integer.MIN_VALUE;
+        
+        for(Action action : actions){
+            double maxQ = action.getMaxQ();
+            if(maxQ > highestValue)
+                highestValue = maxQ;
+        }
+        return highestValue;
     }
     
     public String toString(){

@@ -29,10 +29,6 @@ public class Action {
         return result;
     }
     
-    public double getQValueUpdate(double gamma){
-        return reward + (gamma * getMaxQ());
-    }
-    
     public double getMaxQ(){
         double maxQ = Integer.MIN_VALUE;
         
@@ -46,7 +42,11 @@ public class Action {
     
     public void addDestination(State destination, double probability){
         int nextIndex = destinations.size();
-        destinations.add(new Tuple(destination, probability, 1));
+        if(destination.isFinal)
+            destinations.add(new Tuple(destination, probability, 0));
+        else
+            destinations.add(new Tuple(destination, probability, 0));
+        
         distRand.addNumber(nextIndex, probability);
     }
     
