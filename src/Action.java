@@ -11,21 +11,30 @@ public class Action {
         distRand = new DistributedRandomNumberGenerator();
     }
     
-    public Action(String name, double reward, Vertex destination){
+    public Action(String name, double reward, State destination){
         this(name,  reward);
         addDestination(destination, 1.0);
     }
     
-    public List<Vertex> destinations;
-    public void addDestination(Vertex destination, double probability){
+    public List<State> destinations;
+    public void addDestination(State destination, double probability){
         int nextIndex = destinations.size();
         destinations.add(destination);
         distRand.addNumber(nextIndex, probability);
     }
     
-    public Vertex destination(){
+    public Set<State> getChildren(){
+        Set<State> list = new TreeSet<>();
+        list.addAll(destinations);
+        for(State dest : destinations)
+            list.addAll(dest.getChildren());
+        
+        return list;
+    }
+    
+    public State destination(){
         int randomIndex = distRand.getDistributedRandomNumber();
-        Vertex randomDestination = destinations.get(randomIndex);
+        State randomDestination = destinations.get(randomIndex);
         return randomDestination;
     }
 }
